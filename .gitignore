@@ -1,0 +1,25 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.claude/settings.local.json
+.wrangler/
+.vercel/
+.netlify/
+.env
+.env.*
+!.env.example
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+Thumbs.db
+.DS_Store

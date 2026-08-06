@@ -8,9 +8,18 @@ Absolute dates only (`2026-08-07`) — relative dates rot the moment a session e
 
 ## Status
 
-As of 2026-08-07: v1 PWA builds and runs. Approved design lives in `docs/superpowers/specs/2026-08-07-pro-math-design.md` and is the source of truth. Answer checker, LaTeX-to-infix converter, seeded RNG, all 54 generators (6 topics x 9 levels), session rules, IndexedDB storage, profiles, bilingual UI, and all three input modes are implemented. 196 tests pass. Not a git repo yet.
+As of 2026-08-07: v1 PWA is live at https://pro-math.pages.dev. Approved design lives in `docs/superpowers/specs/2026-08-07-pro-math-design.md` and is the source of truth. Answer checker, LaTeX-to-infix converter, seeded RNG, all 54 generators (6 topics x 9 levels), session rules, IndexedDB storage, profiles, bilingual UI, and all three input modes are implemented. 196 tests pass.
 
 Remaining before the twenty-student trial: nothing structural. The build is at step 10 of the spec's build order.
+
+## Deployment
+
+- Repo: `akmalka97/pro-math`, private, default branch `main`.
+- Host: Cloudflare Pages project `pro-math`, created as a **direct upload**. Cloudflare cannot convert a direct-upload project to a Git-connected one, which is why deployment runs from GitHub Actions rather than Cloudflare's own Git integration.
+- `.github/workflows/deploy.yml` runs on every push to `main`: `npm ci`, `npm test`, `npm run build`, then `wrangler pages deploy`. The tests gate the deploy deliberately — a generator whose declared answer fails to verify must never reach a student.
+- Secrets on the repo: `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (token scope: Account / Cloudflare Pages / Edit).
+- `public/_redirects` sends every path to `index.html`. Without it the workbook QR deep links 404 on first load.
+- Manual deploy, if ever needed: `npx wrangler pages deploy dist --project-name pro-math --branch production`.
 
 ## Decisions
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { createProfile, deleteProfile } from '../../core/progress/store'
 import type { Locale } from '../../core/types'
 import { t } from '../../i18n/strings'
@@ -10,6 +10,8 @@ const AVATARS = ['🦊', '🐼', '🦉', '🐙', '🐝', '🦖', '🐢', '🦁']
 export function ProfilePicker() {
   const { profiles, selectProfile, refreshProfiles, locale } = useAppState()
   const navigate = useNavigate()
+  // Set by RequireProfile when a QR deep link arrived before a profile existed.
+  const intended = (useLocation().state as { intended?: string } | null)?.intended ?? '/t'
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [avatar, setAvatar] = useState(AVATARS[0])
@@ -20,7 +22,7 @@ export function ProfilePicker() {
     const profile = await createProfile(name.trim(), avatar, newLocale)
     await refreshProfiles()
     selectProfile(profile)
-    navigate('/t')
+    navigate(intended, { replace: true })
   }
 
   async function remove(id: string) {
@@ -45,7 +47,7 @@ export function ProfilePicker() {
             className="avatar-tile"
             onClick={() => {
               selectProfile(profile)
-              navigate('/t')
+              navigate(intended, { replace: true })
             }}
             onContextMenu={(event) => {
               event.preventDefault()

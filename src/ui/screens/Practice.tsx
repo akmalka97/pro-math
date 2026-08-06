@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { check } from '../../core/checker/equivalent'
 import { topicById } from '../../core/generators/registry'
 import { CONCEPT_LEVELS } from '../../core/generators/types'
@@ -85,11 +85,7 @@ export function Practice() {
     [profile, topic, level, navigate, refreshProgress],
   )
 
-  if (!topic || !profile) {
-    navigate('/t', { replace: true })
-    return null
-  }
-
+  if (!topic || !profile) return <Navigate to="/t" replace />
   if (!session) return null
 
   const question = session.current.question

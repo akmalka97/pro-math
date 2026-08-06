@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import type { InputMode, Locale } from '../../core/types'
 import { t } from '../../i18n/strings'
 import { useAppState } from '../app/AppState'
@@ -13,10 +13,7 @@ export function Settings() {
   const { profile, locale, saveProfile, selectProfile } = useAppState()
   const navigate = useNavigate()
 
-  if (!profile) {
-    navigate('/', { replace: true })
-    return null
-  }
+  if (!profile) return <Navigate to="/" replace />
 
   return (
     <div className="shell">

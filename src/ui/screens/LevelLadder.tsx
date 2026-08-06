@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { topicById } from '../../core/generators/registry'
 import { CONCEPT_LEVELS } from '../../core/generators/types'
 import { t } from '../../i18n/strings'
@@ -10,10 +10,7 @@ export function LevelLadder() {
   const navigate = useNavigate()
   const topic = topicId ? topicById(topicId) : undefined
 
-  if (!topic) {
-    navigate('/t', { replace: true })
-    return null
-  }
+  if (!topic) return <Navigate to="/t" replace />
 
   const current = progress[topic.id] ?? 1
 

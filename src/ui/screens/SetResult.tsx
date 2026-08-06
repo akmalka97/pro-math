@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { topicById } from '../../core/generators/registry'
 import { PASS_MARK, QUESTIONS_PER_SET, type SetOutcome } from '../../core/progress/session'
 import { t } from '../../i18n/strings'
@@ -17,10 +17,7 @@ export function SetResult() {
   const state = useLocation().state as ResultState | null
   const topic = topicId ? topicById(topicId) : undefined
 
-  if (!topic || !state) {
-    navigate('/t', { replace: true })
-    return null
-  }
+  if (!topic || !state) return <Navigate to="/t" replace />
 
   const passed = state.correct >= PASS_MARK
   const message =

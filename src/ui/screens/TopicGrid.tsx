@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ALL_TOPICS } from '../../core/generators/registry'
 import { CONCEPT_LEVELS } from '../../core/generators/types'
 import { t } from '../../i18n/strings'
@@ -8,10 +8,7 @@ export function TopicGrid() {
   const { profile, locale, progress } = useAppState()
   const navigate = useNavigate()
 
-  if (!profile) {
-    navigate('/', { replace: true })
-    return null
-  }
+  if (!profile) return <Navigate to="/" replace />
 
   return (
     <div className="shell">

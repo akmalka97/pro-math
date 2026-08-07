@@ -92,19 +92,35 @@ table is written, and not before.
 
 In v1:
 
-| Topic | Answer kinds produced |
-|-------|-----------------------|
-| Linear Equations | integer, rational |
-| Algebraic Expressions | expression |
-| Rational Numbers | rational |
-| Factors & Multiples | integer, set, expression |
-| Squares, Cubes & Roots | integer, rational |
-| Ratio, Rate & Proportion | ratio, rational |
+Form 1 KSSM has thirteen chapters. Eight are covered.
 
-Explicitly out of v1: Linear Inequalities, Lines & Angles, Basic Polygons,
-Perimeter & Area, Introduction to Set, Data Handling. All six require a
-rendering stack this build does not have — number lines, geometry, Venn
-diagrams, charts. Geometry is a separate build.
+| Bab | Topic | Answer kinds produced |
+|-----|-------|-----------------------|
+| 1 | Rational Numbers | rational |
+| 2 | Factors & Multiples | integer, set, expression |
+| 3 | Squares, Cubes & Roots | integer, rational |
+| 4 | Ratio, Rate & Proportion | ratio, rational |
+| 5 | Algebraic Expressions | expression |
+| 6 | Linear Equations | integer, rational |
+| 7 | Linear Inequalities | inequality |
+| 13 | The Pythagoras Theorem | integer, rational |
+
+Chapters 7 and 13 were added after the first release. Both were assumed to
+need rendering the app does not have, and neither actually does: an inequality
+is answered as `x > 3` without drawing a number line, and Pythagoras is
+answered as a number without drawing a triangle. The original topic table also
+omitted chapter 13 entirely, which was an error in this document rather than a
+scoping decision.
+
+Explicitly out of scope: Lines & Angles (8), Basic Polygons (9), Perimeter &
+Area (10), Introduction of Set (11), Data Handling (12). These five genuinely
+require a rendering stack this build does not have — geometry, Venn diagrams,
+charts. You cannot ask a student to find angle *x* without drawing the angle.
+That is a separate build with its own design.
+
+The converse of Pythagoras, and the graphing of inequalities on a number line,
+are learning standards not covered here. Both need answer kinds the checker
+does not have — a yes/no verdict and a drawn region respectively.
 
 ---
 
@@ -197,6 +213,48 @@ Larger numbers alone are not a new level — that is tedium, not difficulty.
 | 8 | 72 km/h to m/s | rate conversion |
 | 9 | `a:b = 2:3`, `b:c = 4:5`, find `a:c` | combined ratio |
 
+### Linear Inequalities (Bab 7)
+
+| Level | Example | Concept |
+|-------|---------|---------|
+| 1 | `x + 6 <= 7` | one step, addition |
+| 2 | `3x > 15` | one step, multiplication |
+| 3 | `2x + 3 >= 11` | two step |
+| 4 | `2x - 7 < 5` | negatives |
+| 5 | `3 - 5x >= 38` | negative coefficient — **the direction reverses** |
+| 6 | `5x + 2 < 2x + 11` | variable on both sides |
+| 7 | `2(x + 3) <= 14` | brackets |
+| 8 | `x/3 + 2 > 5` | fractions |
+| 9 | `0 < 2x - 6 < 8` | simultaneous inequalities |
+
+Level 5 is the rung that matters. Dividing by a negative reverses the
+inequality, and it is the single most common mistake in the chapter, so the
+generator deliberately produces a negative coefficient every time rather than
+occasionally.
+
+Strictness is part of the answer: `x > 3` and `x >= 3` are different, and the
+checker treats them as such. Order is not: `3 < x` is accepted for `x > 3`,
+because students write it both ways and both are correct.
+
+### The Pythagoras Theorem (Bab 13)
+
+| Level | Example | Concept |
+|-------|---------|---------|
+| 1 | legs 8 and 15, find the hypotenuse | Pythagorean triples |
+| 2 | hypotenuse 17, one leg 8, find the other | rearranging to a² = c² − b² |
+| 3 | legs 5 and 7, find the hypotenuse | answer is not a whole number, 3 s.f. |
+| 4 | hypotenuse 9, leg 4, find the other | non-integer leg, 3 s.f. |
+| 5 | diagonal of a 20 cm by 21 cm rectangle | recognising the hidden triangle |
+| 6 | a 13 m ladder, foot 5 m from the wall | word problem |
+| 7 | legs 3 and 4, find the perimeter | two steps |
+| 8 | hypotenuse 25, leg 7, find the area | find the leg, then the area |
+| 9 | two right triangles sharing a side | applying the theorem twice |
+
+No diagram is required to ask or to mark any of these, which is why the chapter
+ships without a geometry renderer. Levels 1, 2 and 5 draw from primitive
+triples, scaled as the level rises, so the arithmetic stays clean while the
+numbers grow.
+
 ### Above level 9
 
 No new concept ever appears above level 9. Level 10 and beyond keep the level 9
@@ -232,12 +290,18 @@ the question is replaced and the set still requires ten scored answers.
 ### Answer kinds
 
 ```ts
-type AnswerKind = 'integer' | 'rational' | 'expression' | 'set' | 'ratio'
+type AnswerKind = 'integer' | 'rational' | 'expression' | 'set' | 'ratio' | 'inequality'
 ```
 
 `set` compares order-independently and ignores duplicates, for questions such as
 "list the factors of 18". `ratio` compares by cross-multiplication, so `2:3` and
 `4:6` are both accepted where either is correct.
+
+`inequality` reduces any ordering a student writes to bounds on the variable.
+`3 < x` and `x > 3` are the same answer; `5 >= x > 1` and `1 < x <= 5` are the
+same answer. Strictness is never discarded, because `x > 3` and `x >= 3` are
+genuinely different claims. Bounds are compared with the same numeric rules as
+every other answer, so `x > 1/2` and `x > 0.5` both pass.
 
 ### Pipeline
 
@@ -375,12 +439,15 @@ src/
     generators/
       types.ts               Level, Generated, AnswerKind, Rng
       rng.ts                 seeded, deterministic
-      linear-equations/      L1..L9
-      algebraic-expressions/
-      rational-numbers/
-      factors-multiples/
-      squares-cubes-roots/
-      ratio-rate-proportion/
+      linear-equations.ts    L1..L9
+      algebraic-expressions.ts
+      rational-numbers.ts
+      factors-multiples.ts
+      squares-cubes-roots.ts
+      ratio-rate-proportion.ts
+      linear-inequalities.ts
+      pythagoras.ts
+      format.ts              shared LaTeX and arithmetic helpers
       registry.ts            topic -> levels
     progress/
       session.ts             ten-question set, pass at eight

@@ -297,7 +297,7 @@ const levels: Level[] = [
 
 export const rationalNumbers: Topic = {
   id: 'rational-numbers',
-  chapter: 4,
+  chapter: 1,
   name: { bm: 'Nombor Nisbah', en: 'Rational Numbers' },
   levels,
 }

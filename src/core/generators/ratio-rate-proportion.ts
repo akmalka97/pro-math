@@ -264,7 +264,7 @@ const levels: Level[] = [
 
 export const ratioRateProportion: Topic = {
   id: 'ratio-rate-proportion',
-  chapter: 8,
+  chapter: 4,
   name: { bm: 'Nisbah, Kadar dan Kadaran', en: 'Ratio, Rate & Proportion' },
   levels,
 }

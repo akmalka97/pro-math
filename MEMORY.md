@@ -8,7 +8,9 @@ Absolute dates only (`2026-08-07`) — relative dates rot the moment a session e
 
 ## Status
 
-As of 2026-08-07: v1 PWA is live at https://pro-math.pages.dev. Approved design lives in `docs/superpowers/specs/2026-08-07-pro-math-design.md` and is the source of truth. Answer checker, LaTeX-to-infix converter, seeded RNG, all 54 generators (6 topics x 9 levels), session rules, IndexedDB storage, profiles, bilingual UI, and all three input modes are implemented. 196 tests pass.
+As of 2026-08-07: v1 PWA is live at https://pro-math.pages.dev. Approved design lives in `docs/superpowers/specs/2026-08-07-pro-math-design.md` and is the source of truth. Answer checker, LaTeX-to-infix converter, seeded RNG, 72 generators (8 topics x 9 levels), session rules, IndexedDB storage, profiles, bilingual UI, and all three input modes are implemented. 258 tests pass.
+
+Chapters covered: 1, 2, 3, 4, 5, 6, 7 and 13 of Form 1's thirteen. Chapters 8-12 (Lines & Angles, Basic Polygons, Perimeter & Area, Set, Data Handling) are out of scope because they need a geometry, Venn or charting renderer that does not exist here.
 
 Remaining before the twenty-student trial: nothing structural. The build is at step 10 of the spec's build order.
 
@@ -45,6 +47,10 @@ Remaining before the twenty-student trial: nothing structural. The build is at s
 - `mathjs.simplify` misses more equivalences than expected. Random-point evaluation at ~20 values is the authoritative check for expressions; `simplify` is only a fast path.
 
 ## Lessons
+
+- Two chapter numbers were wrong on first release: Nombor Nisbah was labelled Bab 4 and Nisbah/Kadar/Kadaran was labelled Bab 8, which is Garis dan Sudut. The correct KSSM Form 1 order is 1 Nombor Nisbah, 2 Faktor dan Gandaan, 3 Kuasa Dua/Tiga dan Punca, 4 Nisbah/Kadar/Kadaran, 5 Ungkapan Algebra, 6 Persamaan Linear, 7 Ketaksamaan Linear, 8 Garis dan Sudut, 9 Poligon Asas, 10 Perimeter dan Luas, 11 Pengenalan Set, 12 Pengendalian Data, 13 Teorem Pythagoras. `ALL_TOPICS` is deliberately in teaching order, not chapter order — do not "fix" it to match.
+- Two chapters were wrongly assumed to need a rendering stack. Inequalities are answered as `x > 3` with no number line, and Pythagoras as a number with no triangle. Check whether a chapter actually needs a diagram to be *asked and marked*, not whether textbooks usually draw one.
+- `normalize()` strips everything up to the last `=`, so any answer kind carrying its own relational operators must bypass it. This is why `inequality` has its own path in `check()` rather than going through the shared normaliser.
 
 - The property test (54 levels x 1000 seeds, each level's own declared answer checked, plus a perturbed answer that must fail) is what makes the "generate backwards" principle mechanical rather than aspirational. Run it before trusting any generator change: `npm test`.
 - Known limitation, not yet resolved: Factors & Multiples L7 asks for a prime factorisation, but the answer kind is `expression`, so a student typing `72` instead of `2^3 * 3^2` is marked correct. This follows from the approved "any equivalent form is correct" policy. Fixing it needs either a structural answer kind or a reworded question.

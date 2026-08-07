@@ -119,6 +119,51 @@ describe('ratios', () => {
   })
 })
 
+describe('inequalities', () => {
+  it('accepts the answer written either way round', () => {
+    expect(check('x > 3', 'x > 3', 'inequality')).toBe('correct')
+    expect(check('3 < x', 'x > 3', 'inequality')).toBe('correct')
+    expect(check('x >= -2', 'x >= -2', 'inequality')).toBe('correct')
+    expect(check('-2 <= x', 'x >= -2', 'inequality')).toBe('correct')
+  })
+
+  it('accepts unicode and keyboard variants of the operators', () => {
+    expect(check('x ≥ 3', 'x >= 3', 'inequality')).toBe('correct')
+    expect(check('x ≤ 3', 'x <= 3', 'inequality')).toBe('correct')
+    expect(check('x => 3', 'x >= 3', 'inequality')).toBe('correct')
+  })
+
+  it('treats strictness as part of the answer', () => {
+    expect(check('x >= 3', 'x > 3', 'inequality')).toBe('incorrect')
+    expect(check('x > 3', 'x >= 3', 'inequality')).toBe('incorrect')
+  })
+
+  it('rejects the wrong direction and the wrong bound', () => {
+    expect(check('x < 3', 'x > 3', 'inequality')).toBe('incorrect')
+    expect(check('x > 4', 'x > 3', 'inequality')).toBe('incorrect')
+  })
+
+  it('accepts an equivalent bound in any form', () => {
+    expect(check('x > 1/2', 'x > 0.5', 'inequality')).toBe('correct')
+    expect(check('x > 2/4', 'x > 0.5', 'inequality')).toBe('correct')
+  })
+
+  it('handles compound inequalities in both directions', () => {
+    expect(check('1 < x <= 5', '1 < x <= 5', 'inequality')).toBe('correct')
+    expect(check('5 >= x > 1', '1 < x <= 5', 'inequality')).toBe('correct')
+    expect(check('1 <= x <= 5', '1 < x <= 5', 'inequality')).toBe('incorrect')
+    expect(check('1 < x <= 6', '1 < x <= 5', 'inequality')).toBe('incorrect')
+  })
+
+  it('rejects a bare number for an inequality question', () => {
+    expect(check('3', 'x > 3', 'inequality')).toBe('unreadable')
+  })
+
+  it('rejects a one-sided answer to a compound question', () => {
+    expect(check('x > 1', '1 < x <= 5', 'inequality')).toBe('incorrect')
+  })
+})
+
 describe('unreadable input never counts as wrong', () => {
   for (const student of ['2x+', '', '   ', '??', '1//2']) {
     it(`treats ${JSON.stringify(student)} as unreadable`, () => {

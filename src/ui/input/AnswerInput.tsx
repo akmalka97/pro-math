@@ -16,12 +16,16 @@ type Props = {
 }
 
 const KEYPAD = ['(', ')', '/', '^', 'sqrt(', '-'] as const
+const INEQUALITY_KEYPAD = ['<', '>', '<=', '>=', 'x', '-'] as const
 
 /** Renders the student's typed expression back to them as real mathematics. */
-function previewLatex(raw: string, mode: InputMode): string | null {
+function previewLatex(raw: string, mode: InputMode, kind: AnswerKind): string | null {
   if (!raw.trim()) return null
   try {
-    return parse(normalize(raw, mode)).toTex({ parenthesis: 'auto' })
+    // An inequality carries its own operators, which the normaliser strips
+    // along with the equals sign, so it is parsed as typed.
+    const source = kind === 'inequality' ? raw : normalize(raw, mode)
+    return parse(source).toTex({ parenthesis: 'auto' })
   } catch {
     return null
   }
@@ -45,7 +49,8 @@ export function AnswerInput({ mode, answerKind, value, locale, disabled, onChang
     return () => element.removeEventListener('input', handler)
   }, [mode, value, onChange])
 
-  const preview = useMemo(() => previewLatex(value, mode), [value, mode])
+  const preview = useMemo(() => previewLatex(value, mode, answerKind), [value, mode, answerKind])
+  const keys = answerKind === 'inequality' ? INEQUALITY_KEYPAD : KEYPAD
 
   if (mode === 'mathfield') {
     return (
@@ -82,7 +87,7 @@ export function AnswerInput({ mode, answerKind, value, locale, disabled, onChang
         // The phone keyboard hides these behind its symbol layer, which is
         // enough friction to stop a student answering at all.
         <div className="keypad">
-          {KEYPAD.map((key) => (
+          {keys.map((key) => (
             <button
               key={key}
               type="button"
@@ -93,7 +98,7 @@ export function AnswerInput({ mode, answerKind, value, locale, disabled, onChang
                 fieldRef.current?.focus()
               }}
             >
-              {key === 'sqrt(' ? '√' : key}
+              {key === 'sqrt(' ? '√' : key === '<=' ? '≤' : key === '>=' ? '≥' : key}
             </button>
           ))}
         </div>
@@ -127,6 +132,7 @@ function hintFor(kind: AnswerKind, locale: Locale): string {
     expression: { bm: 'Contoh: 5x + 3', en: 'For example: 5x + 3' },
     set: { bm: 'Contoh: 1, 2, 3, 6', en: 'For example: 1, 2, 3, 6' },
     ratio: { bm: 'Contoh: 2:3', en: 'For example: 2:3' },
+    inequality: { bm: 'Contoh: x > 3 atau 1 < x <= 5', en: 'For example: x > 3 or 1 < x <= 5' },
   }
   return examples[kind][locale]
 }

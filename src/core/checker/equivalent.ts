@@ -1,5 +1,6 @@
 import { create, all, type MathNode } from 'mathjs'
 import type { AnswerKind, InputMode, Verdict } from '../types'
+import { latexToInfix } from './latex-to-infix'
 import { normalize } from './normalize'
 
 /** Default instance: floating point, used for numeric fallbacks and simplify. */
@@ -225,6 +226,127 @@ function checkRatio(student: string, correct: string): Verdict {
   return proportional ? 'correct' : 'incorrect'
 }
 
+type Relation = '<' | '<=' | '>' | '>='
+
+const FLIPPED: Record<Relation, Relation> = { '<': '>', '<=': '>=', '>': '<', '>=': '<=' }
+
+/** `x > 3` and `1 < x <= 5` reduced to a single canonical shape. */
+type Bounded = {
+  lower?: { relation: '<' | '<=' ; value: string }
+  upper?: { relation: '<' | '<=' ; value: string }
+}
+
+function splitRelations(raw: string): { parts: string[]; relations: Relation[] } | null {
+  const text = raw
+    .replace(/≤|=</g, '<=')
+    .replace(/≥|=>/g, '>=')
+    .replace(/[＜]/g, '<')
+    .replace(/[＞]/g, '>')
+
+  const parts: string[] = []
+  const relations: Relation[] = []
+  let buffer = ''
+  for (let i = 0; i < text.length; i++) {
+    const two = text.slice(i, i + 2)
+    if (two === '<=' || two === '>=') {
+      parts.push(buffer)
+      relations.push(two)
+      buffer = ''
+      i++
+      continue
+    }
+    const one = text[i]
+    if (one === '<' || one === '>') {
+      parts.push(buffer)
+      relations.push(one)
+      buffer = ''
+      continue
+    }
+    buffer += one
+  }
+  parts.push(buffer)
+
+  if (relations.length < 1 || relations.length > 2) return null
+  if (parts.some((part) => part.trim() === '')) return null
+  return { parts, relations }
+}
+
+function isVariable(text: string): boolean {
+  return /^[a-zA-Z]$/.test(text.trim())
+}
+
+/**
+ * Rewrites any way a student might order an inequality into bounds on the
+ * variable, so `3 < x`, `x > 3` and `x >= 3` stay distinguishable from each
+ * other while the first two are recognised as the same answer.
+ */
+function toBounded(raw: string): Bounded | null {
+  const split = splitRelations(raw)
+  if (!split) return null
+  const { parts, relations } = split
+
+  if (relations.length === 1) {
+    const [left, right] = parts
+    const relation = relations[0]
+    if (isVariable(left) && !isVariable(right)) {
+      const strict = relation === '<' || relation === '>'
+      return relation === '<' || relation === '<='
+        ? { upper: { relation: strict ? '<' : '<=', value: right } }
+        : { lower: { relation: strict ? '<' : '<=', value: right } }
+    }
+    if (isVariable(right) && !isVariable(left)) {
+      const flipped = FLIPPED[relation]
+      const strict = flipped === '<' || flipped === '>'
+      return flipped === '<' || flipped === '<='
+        ? { upper: { relation: strict ? '<' : '<=', value: left } }
+        : { lower: { relation: strict ? '<' : '<=', value: left } }
+    }
+    return null
+  }
+
+  // Compound: the variable must sit in the middle, as in 1 < x <= 5.
+  const [low, middle, high] = parts
+  if (!isVariable(middle)) return null
+  const [first, second] = relations
+  const ascending = first === '<' || first === '<='
+  const descending = first === '>' || first === '>='
+  if (ascending !== (second === '<' || second === '<=')) return null
+
+  if (ascending) {
+    return {
+      lower: { relation: first === '<' ? '<' : '<=', value: low },
+      upper: { relation: second === '<' ? '<' : '<=', value: high },
+    }
+  }
+  if (descending) {
+    // 5 >= x > 1 is the same statement written backwards.
+    return {
+      lower: { relation: second === '>' ? '<' : '<=', value: high },
+      upper: { relation: first === '>' ? '<' : '<=', value: low },
+    }
+  }
+  return null
+}
+
+function checkInequality(studentRaw: string, correct: string): Verdict {
+  const student = toBounded(studentRaw)
+  if (!student) return 'unreadable'
+  const expected = toBounded(correct)
+  if (!expected) throw new Error(`generator produced an unparseable inequality: ${correct}`)
+
+  for (const side of ['lower', 'upper'] as const) {
+    const studentSide = student[side]
+    const expectedSide = expected[side]
+    if (!studentSide !== !expectedSide) return 'incorrect'
+    if (!studentSide || !expectedSide) continue
+    // Strictness is part of the answer: x > 3 is not x >= 3.
+    if (studentSide.relation !== expectedSide.relation) return 'incorrect'
+    const bounds = checkNumeric(normalize(studentSide.value), expectedSide.value)
+    if (bounds !== 'correct') return bounds
+  }
+  return 'correct'
+}
+
 /**
  * The only entry point. `correct` is the canonical answer the generator
  * declared; `studentRaw` is whatever the student typed.
@@ -235,6 +357,13 @@ export function check(
   kind: AnswerKind,
   mode: InputMode = 'expression',
 ): Verdict {
+  // Inequalities carry their own relational operators, which the ordinary
+  // normaliser would strip along with the equals sign.
+  if (kind === 'inequality') {
+    const source = mode === 'mathfield' ? latexToInfix(studentRaw) : studentRaw
+    return source.trim() ? checkInequality(source, correct) : 'unreadable'
+  }
+
   const student = kind === 'ratio' || kind === 'set' ? normalizeLoose(studentRaw, mode) : normalize(studentRaw, mode)
   if (!student) return 'unreadable'
 

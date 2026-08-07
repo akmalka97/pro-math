@@ -1,6 +1,6 @@
 export type Verdict = 'correct' | 'incorrect' | 'unreadable'
 
-export type AnswerKind = 'integer' | 'rational' | 'expression' | 'set' | 'ratio'
+export type AnswerKind = 'integer' | 'rational' | 'expression' | 'set' | 'ratio' | 'inequality'
 
 export type Locale = 'bm' | 'en'
 

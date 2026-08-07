@@ -19,6 +19,11 @@ function perturb(answer: string, kind: AnswerKind): string {
       terms[terms.length - 1] = `${Number(terms[terms.length - 1]) + 1}`
       return terms.join(':')
     }
+    case 'inequality': {
+      // Shifting a bound is the perturbation a student would actually make;
+      // adding 1 to the whole statement is meaningless.
+      return answer.replace(/(-?\d+(?:\.\d+)?)\s*$/, (bound) => `${Number(bound) + 1}`)
+    }
     case 'expression':
       return `(${answer}) + 1`
     default:

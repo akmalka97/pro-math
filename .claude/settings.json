@@ -1,0 +1,21 @@
+{
+  "extraKnownMarketplaces": {
+    "designer-skills": {
+      "source": {
+        "source": "github",
+        "repo": "Owl-Listener/designer-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "designer-toolkit@designer-skills": true,
+    "ui-design@designer-skills": true,
+    "interaction-design@designer-skills": true,
+    "visual-critique@designer-skills": true,
+    "prototyping-testing@designer-skills": true,
+    "design-systems@designer-skills": true,
+    "cognitive-accessibility@designer-skills": true,
+    "accessible-content@designer-skills": true,
+    "inclusive-interaction@designer-skills": true
+  }
+}
